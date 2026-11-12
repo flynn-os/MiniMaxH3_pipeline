@@ -34,11 +34,8 @@ from typing import Any
 
 
 def detect_best_attention() -> str:
-    """使用 find_spec 静态探测而不提前 import torch，确保 mmgp 能在 CUDA 初始化前挂载显存优化分配器。"""
-    import importlib.util
-    if importlib.util.find_spec("sageattention") is not None:
-        return "sage2"
-    return "sdpa"
+    """默认交由 WanGP 原生 auto 选择当前 GPU 实际可用且最快的核心（sage / flash / sdpa）。"""
+    return "auto"
 
 
 def detect_default_profile() -> str:
@@ -168,12 +165,13 @@ def run_batch_mode(args: argparse.Namespace) -> int:
     from shared.api import init  # type: ignore
 
     cli_args = [
-        "--attention", attention,
         "--profile", str(profile),
         "--output-dir", str(outputs_dir),
     ]
-    print(f"⚙️  初始化 WanGP Session: cli_args={cli_args}")
-    session = init(root=wangp_dir, cli_args=cli_args)
+    if attention != "auto":
+        cli_args = ["--attention", attention] + cli_args
+    print(f"⚙️  初始化 WanGP Session: output_dir={outputs_dir} | cli_args={cli_args}")
+    session = init(root=wangp_dir, output_dir=outputs_dir, cli_args=cli_args)
 
     run_started = dt.datetime.now(dt.timezone.utc)
     summary_records: list[dict[str, Any]] = []
@@ -209,19 +207,25 @@ def run_batch_mode(args: argparse.Namespace) -> int:
                     for event in job.events.iter(timeout=0.5):
                         if event.kind == "progress":
                             p = event.data
-                            msg = f"   ⏳ {p.phase}: step {p.current_step}/{p.total_steps} ({p.progress * 100:.0f}%)"
+                            msg = f"   ⏳ {p.phase}: step {p.current_step}/{p.total_steps} ({p.progress}%)"
                             if msg != last_step_msg:
                                 print(msg, flush=True)
                                 last_step_msg = msg
+                        elif event.kind in ("info", "status"):
+                            txt = str(event.data or "").strip()
+                            if txt:
+                                print(f"   [{event.kind}] {txt}", flush=True)
+                        elif event.kind == "error":
+                            print(f"   [error] {event.data}", flush=True)
                         elif event.kind == "stream":
                             line = event.data.text.strip()
-                            if line and any(k in line.lower() for k in ("download", "error", "warn", "saved")):
+                            if line and any(k in line.lower() for k in ("download", "error", "warn", "saved", "attention", "lora")):
                                 print(f"   [{event.data.stream}] {line}", flush=True)
 
                     res = job.result()
                     elapsed = round(time.time() - t0, 2)
-                    if res.success:
-                        files = [str(f) for f in res.generated_files]
+                    files = [str(f) for f in getattr(res, "generated_files", [])]
+                    if res.success and files:
                         drive_uris = [
                             f"drive://outputs/{Path(f).name}" for f in files
                         ]
@@ -237,6 +241,8 @@ def run_batch_mode(args: argparse.Namespace) -> int:
                         })
                     else:
                         errs = [e.message for e in getattr(res, "errors", [])]
+                        if not errs and not files:
+                            errs = ["WanGP exited without producing output files (check [info]/[error] logs above)"]
                         print(f"❌ [{shot_id}] 渲染失败 ({elapsed}s): {errs}")
                         file_failed = True
                         any_failed = True
