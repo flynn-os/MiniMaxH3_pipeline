@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "target_hardware": {
+    "recommended_colab_gpu": "NVIDIA A100-SXM4-40GB",
+    "recommended_wangp_profile": 4,
+    "fallback_colab_gpu": "NVIDIA L4 (24GB, use profile 4.5 and 832x480 / 960x544)"
+  },
+  "resolutions": {
+    "480p_16_9": "832x480",
+    "544p_16_9": "960x544",
+    "768p_16_9": "1344x768",
+    "480p_9_16": "480x832",
+    "544p_9_16": "544x960",
+    "768p_9_16": "768x1344",
+    "768p_1_1": "1024x1024",
+    "544p_21_9": "1280x544"
+  },
+  "presets": {
+    "fl2va_8step_quality": {
+      "description": "主力甜点档：支持文生音视频(T2VA)、首帧(I2VA)、首尾帧(FL2VA)，Pruned 20B + LightX2V 8步蒸馏 LoRA，画质稳、带 32kHz 立体声音频。",
+      "settings": {
+        "model_type": "minimax_h3_fl2va_pruned",
+        "image_mode": 0,
+        "num_inference_steps": 8,
+        "video_length": 192,
+        "sliding_window_size": 362,
+        "resolution": "960x544",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "multi_prompts_gen_type": "PW",
+        "audio_prompt_type": "A",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lightx2v_fl2v_turbo_8step_alpha8_v1.0_bf16.safetensors"
+        ],
+        "loras_multipliers": "1.0",
+        "prompt_enhancer": ""
+      }
+    },
+    "fl2va_4step_fast": {
+      "description": "极速草稿档：DMAD 4步 Critic LoRA + dmad_renoise 采样器，适合快速验证镜头构图与台词节奏，极省 Colab CU。",
+      "settings": {
+        "model_type": "minimax_h3_fl2va_pruned",
+        "image_mode": 0,
+        "num_inference_steps": 4,
+        "sample_solver": "dmad_renoise",
+        "guidance_phases": 1,
+        "video_length": 124,
+        "sliding_window_size": 362,
+        "resolution": "832x480",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "multi_prompts_gen_type": "PW",
+        "audio_prompt_type": "A",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_dmad_4step_full_critic_lora_bf16.safetensors"
+        ],
+        "loras_multipliers": "1.0",
+        "custom_settings": {
+          "audio_refinement": "none"
+        },
+        "prompt_enhancer": ""
+      }
+    },
+    "ref2va_8step_quality": {
+      "description": "多模态参考主力档：支持传入人物/场景参考图(image_refs)、参考视频(video_source)与音色参考(audio_guide)，8步生成高一致性音视频。",
+      "settings": {
+        "model_type": "minimax_h3_ref2va_pruned",
+        "image_mode": 0,
+        "num_inference_steps": 8,
+        "video_length": 192,
+        "sliding_window_size": 362,
+        "resolution": "960x544",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "multi_prompts_gen_type": "PW",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lightx2v_ref2v_turbo_8step_alpha8_v1.0_768p_bf16.safetensors"
+        ],
+        "loras_multipliers": "1.0",
+        "remove_background_images_ref": 0,
+        "prompt_enhancer": ""
+      }
+    },
+    "ref2va_2k_ic": {
+      "description": "2K 终极高清重绘档：HyperFlow 8步 + Regenerate 2K IC 3步二阶段采样，保持人脸身份、口型与原始音轨并提升至高分辨率细节（建议在 A100 40GB 上跑 5–8 秒镜头）。",
+      "settings": {
+        "model_type": "minimax_h3_ref2va_pruned",
+        "image_mode": 0,
+        "merge_loras": "merge before",
+        "guidance_phases": 2,
+        "num_inference_steps": 8,
+        "num_inference_steps2": 3,
+        "switch_threshold": 0.834942,
+        "custom_sigmas": "; 0.834942, 0.696852, 0.468753",
+        "sample_solver": "euler",
+        "video_length": 124,
+        "sliding_window_size": 362,
+        "resolution": "1344x768",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "multi_prompts_gen_type": "PW",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_hyperflow_8step_lora_bf16.safetensors",
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/open_h3_regenerate_2k_ic_lora_bf16.safetensors",
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lms_v1.0_r64.safetensors"
+        ],
+        "loras_multipliers": "1;1 0;1 0;1",
+        "remove_background_images_ref": 0,
+        "prompt_enhancer": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# Cloud workspace symlink & local run reports
+drive_workspace
+jobs/reports/
+
+# Never store heavy media or archives in local repository (use Google Drive MiniMaxH3_Workspace/{assets,outputs})
+outputs/
+assets/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.flac
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bundle.zip
+
+# Secrets
+.env
+.env.*

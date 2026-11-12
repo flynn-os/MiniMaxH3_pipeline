@@ -1,0 +1,23 @@
+[
+  {
+    "model_type": "minimax_h3_fl2va_pruned",
+    "image_mode": 0,
+    "num_inference_steps": 8,
+    "video_length": 158,
+    "sliding_window_size": 362,
+    "resolution": "960x544",
+    "guidance_scale": 1,
+    "flow_shift": 12,
+    "multi_prompts_gen_type": "PW",
+    "audio_prompt_type": "A",
+    "activated_loras": [
+      "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lightx2v_fl2v_turbo_8step_alpha8_v1.0_bf16.safetensors"
+    ],
+    "loras_multipliers": "1.0",
+    "prompt_enhancer": "",
+    "prompt": "integrated_multimodal_description: [Shot 1] A six-second live-action cinematic single take at night in a rain-drenched narrow Tokyo alley lit by magenta and cyan neon signs. Heavy raindrops splash across black wet asphalt and fogged glass. A young traveler in a dark techwear jacket pushes aside a weathered navy noren curtain and steps under the warm amber lantern glow of a tiny wooden ramen stall. The camera tracks smoothly forward from behind his shoulder into a medium close-up as thick white steam billows from a simmering brass pot. The elderly chef looks up through the rising steam, smiles warmly, and says clearly (S1) <d>[Chinese] 外面雨大，快坐下喝口热汤吧。</d> The traveler nods with a relieved smile as warm light reflects in his wet hair.\noverall_soundscape: Heavy rain pattering on canvas awnings and wet pavement, the crisp rustle of fabric as the noren curtain parts, rich broth bubbling steadily in a metal pot, wooden geta footsteps, and the chef's warm synchronized spoken line.\nnon_diegetic_music: A soft, nostalgic lo-fi electric piano chord progression playing gently beneath the rain.",
+    "seed": 20261112,
+    "_shot_id": "shot_01_ramen_welcome",
+    "_shot_title": "霓虹雨夜推门进入拉面摊（音画口型同步样片）"
+  }
+]

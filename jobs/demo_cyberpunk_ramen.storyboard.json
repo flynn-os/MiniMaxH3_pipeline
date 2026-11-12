@@ -1,0 +1,24 @@
+{
+  "project_title": "Cyberpunk Midnight Ramen — 2-Shot Audiovisual Demo",
+  "default_preset": "fl2va_8step_quality",
+  "shots": [
+    {
+      "id": "shot_01_arrival",
+      "title": "霓虹雨夜推门进入拉面摊",
+      "preset": "fl2va_8step_quality",
+      "resolution": "544p_16_9",
+      "duration_seconds": 6,
+      "seed": 20261112,
+      "prompt": "integrated_multimodal_description: [Shot 1] A six-second live-action cinematic single take at night in a rain-drenched narrow Tokyo alley lit by magenta and cyan neon signs. Heavy raindrops splash across black wet asphalt and fogged glass. A young traveler in a dark techwear jacket pushes aside a weathered navy noren curtain and steps under the warm amber lantern glow of a tiny wooden ramen stall. The camera tracks smoothly forward from behind his shoulder into a medium close-up as thick white steam billows from a simmering brass pot. The elderly chef looks up through the rising steam, smiles warmly, and says clearly (S1) <d>[Chinese] 外面雨大，快坐下喝口热汤吧。</d> The traveler nods with a relieved smile as warm light reflects in his wet hair.\noverall_soundscape: Heavy rain pattering on canvas awnings and wet pavement, the crisp rustle of fabric as the noren curtain parts, rich broth bubbling steadily in a metal pot, wooden geta footsteps, and the chef's warm synchronized spoken line.\nnon_diegetic_music: A soft, nostalgic lo-fi electric piano chord progression playing gently beneath the rain."
+    },
+    {
+      "id": "shot_02_ramen_closeup",
+      "title": "拉面特写与升腾热气焦点转移",
+      "preset": "fl2va_8step_quality",
+      "resolution": "544p_16_9",
+      "duration_seconds": 6,
+      "seed": 20261113,
+      "prompt": "integrated_multimodal_description: [Shot 1] A six-second live-action macro-to-medium shot with shallow depth of field on a polished cedar counter. In the crisp foreground, a handcrafted ceramic bowl of tonkotsu ramen steams vigorously, golden broth glistening around wavy noodles, charred chashu pork, soft-boiled egg halves, and bright green scallions. Bamboo chopsticks lift a strand of noodles as swirling white steam rises across the frame. Halfway through the shot, camera focus racks smoothly from the steaming bowl to the traveler across the counter, who blows gently on the noodles, takes a satisfied breath, and says softly (S1) <d>[Chinese] 就是这个味道。</d>\noverall_soundscape: Gentle ceramic clink of the bowl settling on wood, simmering broth, subtle slurp and soft exhale blowing across hot steam, rain murmuring faintly outside, and the clear spoken line.\nnon_diegetic_music: Warm acoustic guitar harmonics continuing the calm midnight mood."
+    }
+  ]
+}

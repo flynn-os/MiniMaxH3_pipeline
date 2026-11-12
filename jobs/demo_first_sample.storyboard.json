@@ -1,0 +1,15 @@
+{
+  "project_title": "Cyberpunk Midnight Ramen — Single-Shot Audiovisual Showcase",
+  "default_preset": "fl2va_8step_quality",
+  "shots": [
+    {
+      "id": "shot_01_ramen_welcome",
+      "title": "霓虹雨夜推门进入拉面摊（音画口型同步样片）",
+      "preset": "fl2va_8step_quality",
+      "resolution": "544p_16_9",
+      "duration_seconds": 6,
+      "seed": 20261112,
+      "prompt": "integrated_multimodal_description: [Shot 1] A six-second live-action cinematic single take at night in a rain-drenched narrow Tokyo alley lit by magenta and cyan neon signs. Heavy raindrops splash across black wet asphalt and fogged glass. A young traveler in a dark techwear jacket pushes aside a weathered navy noren curtain and steps under the warm amber lantern glow of a tiny wooden ramen stall. The camera tracks smoothly forward from behind his shoulder into a medium close-up as thick white steam billows from a simmering brass pot. The elderly chef looks up through the rising steam, smiles warmly, and says clearly (S1) <d>[Chinese] 外面雨大，快坐下喝口热汤吧。</d> The traveler nods with a relieved smile as warm light reflects in his wet hair.\noverall_soundscape: Heavy rain pattering on canvas awnings and wet pavement, the crisp rustle of fabric as the noren curtain parts, rich broth bubbling steadily in a metal pot, wooden geta footsteps, and the chef's warm synchronized spoken line.\nnon_diegetic_music: A soft, nostalgic lo-fi electric piano chord progression playing gently beneath the rain."
+    }
+  ]
+}
