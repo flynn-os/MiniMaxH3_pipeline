@@ -26,6 +26,7 @@ MiniMaxH3_pipeline/
 ├── scripts/
 │   ├── build_queue.py                        # [本机运行] 零依赖 Storyboard 编译器与 drive:// 云端 URI 校验器
 │   ├── sync_drive.py                         # [本机运行] Google Drive 流式工作区管理 (push/pull/stage-asset/evict)
+│   ├── launch_colab_cli.py                   # [本机运行] 全无头 colab CLI 一键申请 A100 -> 挂载云盘 -> 渲染 -> 销毁
 │   ├── colab_bootstrap.sh                    # [Colab运行] 一键部署 WanGP、规避 PyTorch 2.8/2.9 坑并绑定云盘缓存
 │   └── colab_runner.py                       # [Colab运行] 无头批量渲染 + 战报输出 + 自动断连释放 A100 (亦支持 MCP/WebUI)
 ├── jobs/
@@ -75,9 +76,12 @@ python3 scripts/build_queue.py jobs/demo_cyberpunk_ramen.storyboard.json --stric
 python3 scripts/sync_drive.py push --job jobs/demo_cyberpunk_ramen.wangp.json
 ```
 
-### 3. 打开 Colab `A100 (40GB)` 点火出片
-点击顶部的 **Open in Colab** 徽章（或在 Google Drive 中打开 `MiniMaxH3_Colab_A100_Runner.ipynb`），选择 **`A100 GPU`** 并运行前 3 个单元格：
-- 渲染完成后，MP4 直接保存在 `MiniMaxH3_Workspace/outputs/`，Colab 实例自动调用 `runtime.unassign()` 断开停止扣点。
+### 3. 点火出片（推荐本机 `colab` CLI 全无头直跑，免开浏览器）
+- **方式 A（推荐，全自动 CLI 零浏览器操作）**：若已安装 `google-colab-cli`（`uv tool install google-colab-cli`），直接在本机一条命令完成申请 `A100`、挂载 Google Drive、批量渲染并在 `finally` 中自动执行 `colab stop` 销毁实例：
+  ```bash
+  python3 scripts/launch_colab_cli.py --job jobs/demo_first_sample.wangp.json
+  ```
+- **方式 B（网页端 Notebook）**：点击顶部的 **Open in Colab** 徽章，选择 **`A100 GPU`** 并运行前 3 个单元格；渲染完成后 MP4 保存在 `MiniMaxH3_Workspace/outputs/`，并自动调用 `runtime.unassign()` 停止扣点。
 
 ### 4. 本地流式验收与空间归零维护
 ```bash
