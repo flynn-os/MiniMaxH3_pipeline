@@ -178,6 +178,8 @@ def compile_shot(
         if media_key in shot and shot[media_key]:
             val = shot[media_key]
             task[media_key] = val
+            if media_key == "audio_guide" and not task.get("audio_prompt_type"):
+                task["audio_prompt_type"] = "A"
             if isinstance(val, str):
                 err = validate_drive_uri(val, drive_ws)
                 if err:

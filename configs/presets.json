@@ -28,7 +28,7 @@
         "guidance_scale": 1,
         "flow_shift": 12,
         "multi_prompts_gen_type": "PW",
-        "audio_prompt_type": "A",
+        "audio_prompt_type": "",
         "activated_loras": [
           "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lightx2v_fl2v_turbo_8step_alpha8_v1.0_bf16.safetensors"
         ],
@@ -50,7 +50,7 @@
         "guidance_scale": 1,
         "flow_shift": 12,
         "multi_prompts_gen_type": "PW",
-        "audio_prompt_type": "A",
+        "audio_prompt_type": "",
         "activated_loras": [
           "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_dmad_4step_full_critic_lora_bf16.safetensors"
         ],
