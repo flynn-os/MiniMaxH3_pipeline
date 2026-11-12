@@ -34,21 +34,23 @@ from typing import Any
 
 
 def detect_best_attention() -> str:
-    try:
-        import sageattention  # noqa: F401
+    """使用 find_spec 静态探测而不提前 import torch，确保 mmgp 能在 CUDA 初始化前挂载显存优化分配器。"""
+    import importlib.util
+    if importlib.util.find_spec("sageattention") is not None:
         return "sage2"
-    except Exception:
-        return "sdpa"
+    return "sdpa"
 
 
 def detect_default_profile() -> str:
-    """根据当前 GPU 显存自动选择最优 mmgp Profile：A100(40GB+) 用 4，L4(24GB) 用 4.5 保安全。"""
+    """通过 nvidia-smi 查询显存（不初始化 PyTorch CUDA 上下文）：A100(40GB+) 用 4，L4(24GB) 用 4.5 保安全。"""
     try:
-        import torch
-        if torch.cuda.is_available():
-            vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-            if vram_gb < 28:
-                return "4.5"
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+            text=True,
+        )
+        vram_mib = float(out.strip().splitlines()[0])
+        if vram_mib < 28000:
+            return "4.5"
     except Exception:
         pass
     return "4"

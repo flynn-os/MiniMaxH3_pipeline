@@ -81,35 +81,45 @@ if ! python3 -c "import sageattention" >/dev/null 2>&1; then
   pip install -q sageattention --no-build-isolation 2>/dev/null || echo "ℹ️  跳过编译型 SageAttention，运行时将自动使用 PyTorch SDPA / FlashAttention。"
 fi
 
-# 7. 写入 wgp_config.json 并建立 LoRA URL 缓存软链，实现跨会话秒启动
+# 7. 通过目录级软链绑定 ckpts / loras / outputs（不提前伪造残缺 wgp_config.json，让 WanGP 自动生成含全部默认键的完整配置）
 python3 - "${WANGP_DIR}" "${WORKSPACE_DRIVE}" << 'PY'
-import json, sys
+import json, shutil, sys
 from pathlib import Path
 
 wangp_dir = Path(sys.argv[1])
 drive_dir = Path(sys.argv[2])
 
+# 若存在缺少默认字段的残缺 wgp_config.json，先移除以便 WanGP 首次导入自动初始化完整字典
 cfg_path = wangp_dir / "wgp_config.json"
-cfg = {}
 if cfg_path.is_file():
     try:
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        if "attention_mode" not in cfg or "video_profile" not in cfg:
+            cfg_path.unlink()
     except Exception:
-        cfg = {}
+        cfg_path.unlink()
 
-ckpts_dir = str(drive_dir / "cache" / "ckpts")
-loras_dir = str(drive_dir / "cache" / "loras")
-outputs_dir = str(drive_dir / "outputs")
+link_map = {
+    wangp_dir / "ckpts": drive_dir / "cache" / "ckpts",
+    wangp_dir / "loras": drive_dir / "cache" / "loras",
+    wangp_dir / "outputs": drive_dir / "outputs",
+}
 
-cfg.update({
-    "checkpoints_paths": [ckpts_dir],
-    "loras_root": loras_dir,
-    "save_path": outputs_dir,
-    "image_save_path": outputs_dir,
-    "audio_save_path": outputs_dir,
-    "mesh_save_path": outputs_dir,
-})
-cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+for link_src, link_dst in link_map.items():
+    link_dst.mkdir(parents=True, exist_ok=True)
+    if link_src.is_symlink():
+        if link_src.resolve() != link_dst.resolve():
+            link_src.unlink()
+            link_src.symlink_to(link_dst)
+    elif link_src.is_dir():
+        for item in link_src.iterdir():
+            target_item = link_dst / item.name
+            if not target_item.exists():
+                shutil.move(str(item), str(target_item))
+        shutil.rmtree(link_src)
+        link_src.symlink_to(link_dst)
+    elif not link_src.exists():
+        link_src.symlink_to(link_dst)
 
 drive_lora_cache = drive_dir / "cache" / "loras_url_cache_v2.json"
 if not drive_lora_cache.exists():
@@ -121,7 +131,7 @@ if local_lora_cache.exists() and not local_lora_cache.is_symlink():
 if not local_lora_cache.exists():
     local_lora_cache.symlink_to(drive_lora_cache)
 
-print(f"✅ 已绑定 Google Drive 持久化配置: {cfg_path}")
+print("✅ 已通过软链将 WanGP ckpts / loras / outputs 持久化绑定至云端目录")
 PY
 
 echo "============================================================"
