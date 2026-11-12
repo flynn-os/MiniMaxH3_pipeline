@@ -219,7 +219,12 @@ def run_batch_mode(args: argparse.Namespace) -> int:
                             print(f"   [error] {event.data}", flush=True)
                         elif event.kind == "stream":
                             line = event.data.text.strip()
-                            if line and any(k in line.lower() for k in ("download", "error", "warn", "saved", "attention", "lora")):
+                            if (
+                                line
+                                and "%|" not in line
+                                and "B/s]" not in line
+                                and any(k in line.lower() for k in ("error", "warn", "saved", "traceback", "exception"))
+                            ):
                                 print(f"   [{event.data.stream}] {line}", flush=True)
 
                     res = job.result()
