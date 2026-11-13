@@ -222,6 +222,7 @@ def run_batch_mode(args: argparse.Namespace) -> int:
 
             for t_idx, raw_task in enumerate(tasks, start=1):
                 raw_task = maybe_upgrade_task_for_80gb_a100(raw_task, vram_gb, free_gb)
+                raw_task.pop("merge_loras", None)
                 shot_id = raw_task.pop("_shot_id", f"shot_{t_idx:02d}")
                 shot_title = raw_task.pop("_shot_title", "")
                 t0 = time.time()
