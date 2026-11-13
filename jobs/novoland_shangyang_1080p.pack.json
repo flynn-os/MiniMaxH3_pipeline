@@ -1,0 +1,92 @@
+{
+  "project_title": "Novoland: Eagle Flag (九州缥缈录) — Shangyang Pass 2D Epic Anime 1080p Demo",
+  "novel_volume": "Volume IV: Chenyue's Campaign (《辰月之征》· 殇阳关血战)",
+  "style_lock": {
+    "master_style_prompt": "2D hand-drawn theatrical anime film frame, ufotable & WIT Studio dark-fantasy epic sakuga aesthetic, crisp dark ink lineart, multi-plane cel shading with hard shadow edges, hand-painted gouache matte background, dramatic crimson firelight against cold slate-blue snowstorm, strictly flat 2D anime facial planes, NO 3D CGI, NO photorealism, NO text, NO letters, NO subtitles, NO watermarks",
+    "palette": "obsidian iron-black, charred bronze, crimson embers, cold slate-blue winter dusk, blood-moon red"
+  },
+  "characters": [
+    {
+      "id": "char_lvguichen",
+      "name": "Lv Guichen (Asule / 吕归尘)",
+      "refs": ["style_anchor_2d"],
+      "prompt": "Character design reference illustration in the exact 2D theatrical anime style of the input image. Single character centered against a plain neutral dark slate-grey background, upper-body and three-quarter battle stance with clear face close-up framing: young 17-year-old Northern Steppe prince Lv Guichen (Asule), lean agile build, pale finely drawn 2D anime face with faint soot smudges, slightly disheveled long dark-brown hair with two thin braided leather cords, calm dark eyes catching a subtle crimson firelight glint, wearing a dark wolf-fur collar cloak over bronze-inlaid leather lamellar armor, grasping the hilt of the ancient jagged bronze-and-black-iron Cangyun Guchi Sword with faint golden inlay runes along the blade. Pure visual art only, STRICTLY NO text, NO labels, NO letters, NO numbers anywhere on the image."
+    },
+    {
+      "id": "char_jiye",
+      "name": "Ji Ye (姬野)",
+      "refs": ["style_anchor_2d"],
+      "prompt": "Character design reference illustration in the exact 2D theatrical anime style of the input image. Single character centered against a plain neutral dark slate-grey background, upper-body battle stance with clear face framing: fierce 17-year-old warrior youth Ji Ye, sharp dark eyebrows, intense wolf-like amber eyes, spiky black hair tied carelessly back, thin scar across left cheek, wearing battle-dented black-iron breastplate and pauldrons over a worn crimson cloth tunic, gripping the heavy black-iron Tiger-Fang Spear with twin crescent side-blades below the spearhead. Pure visual art only, STRICTLY NO text, NO labels, NO letters, NO numbers anywhere on the image."
+    },
+    {
+      "id": "char_yingwuyi",
+      "name": "Ying Wuyi (嬴无翳)",
+      "refs": ["style_anchor_2d"],
+      "prompt": "Character design reference illustration in the exact 2D theatrical anime style of the input image. Single character centered against a plain neutral dark slate-grey background, imposing heroic upper-body stance: 45-year-old formidable warlord Ying Wuyi, broad armored shoulders, lion-like thick dark beard and mustache, piercing authoritative eyes, wearing ornate black-bronze Qilin embossed heavy plate armor and a billowing dark crimson war cape, resting a gauntlet on an inlaid heavy war sword hilt. Pure visual art only, STRICTLY NO text, NO labels, NO letters, NO numbers anywhere on the image."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_shangyang_pass",
+      "refs": ["style_anchor_2d"],
+      "prompt": "Empty wide 2D hand-painted theatrical anime background plate in the exact style of the input image, NO people or characters. Battered ancient stone battlements of Shangyang Pass at freezing winter night beneath a colossal ominous blood-red full moon, broken wooden watchtower beams, swirling snow and glowing orange embers drifting through indigo clouds, hundreds of distant crimson army torches snaking like lava across the dark valley below. STRICTLY NO characters, NO text."
+    },
+    {
+      "id": "scene_blood_battlefield",
+      "refs": ["style_anchor_2d"],
+      "prompt": "Empty 2D hand-painted theatrical anime battlefield background in the exact style of the input image, NO people or characters. Frozen mud and trampled snow outside massive fortress gates stained with ash and crimson battle smoke, snapped bronze halberds and shredded dark-red war banners planted in the ground, roaring iron fire braziers casting warm amber rim light into heavy snowstorm fog. STRICTLY NO characters, NO text."
+    }
+  ],
+  "keyframes": [
+    {
+      "id": "shot_01_start",
+      "refs": ["style_anchor_2d", "scene_shangyang_pass"],
+      "prompt": "Using the exact 2D theatrical anime art style of image 1 and the fortress environment of image 2, compose a sweeping high-angle establishing anime film shot overlooking the crumbling stone battlements of Shangyang Pass at midnight. A gigantic blood-red moon hangs low over jagged mountain ridges; tattered crimson war banners whip violently in heavy blowing snow and bright orange sparks while rivers of distant torchlight advance across the dark valley. Pure 2D anime keyframe, NO text."
+    },
+    {
+      "id": "shot_02_start",
+      "refs": ["style_anchor_2d", "char_yingwuyi", "scene_blood_battlefield"],
+      "prompt": "Using the 2D anime art style of image 1, place the armored warlord Ying Wuyi from image 2 onto the freezing battlefield of image 3. Dramatic low-angle action shot: four black-armored warhorses pull a heavy bronze-plated two-wheeled war chariot surging forward through snow and flying sparks; Ying Wuyi in his dark-gold Qilin heavy armor and billowing crimson cape stands tall on the chariot deck gripping his sword hilt with commanding fury. Crisp 2D hand-drawn sakuga keyframe, NO text."
+    },
+    {
+      "id": "shot_03_start",
+      "refs": ["style_anchor_2d", "char_jiye", "scene_blood_battlefield"],
+      "prompt": "Using the 2D anime art style of image 1, frame the fierce warrior youth Ji Ye from image 2 inside the smoky torchlit battlefield of image 3. Medium close-up anime shot at eye level: Ji Ye in his scarred black-iron breastplate and dark-red tunic holds his heavy black-iron Tiger-Fang Spear diagonally across his chest, soot and faint crimson paint on his cheek, firelight reflecting in his fierce amber eyes as he turns slightly toward his comrade beside him in falling snow and glowing embers. Mouth closed or slightly parted ready to speak, pure 2D anime keyframe, NO text."
+    },
+    {
+      "id": "shot_04_start",
+      "refs": ["style_anchor_2d", "char_lvguichen", "scene_blood_battlefield"],
+      "prompt": "Using the 2D anime art style of image 1, frame the Northern Steppe prince Lv Guichen from image 2 inside the snow-swept night battlefield of image 3. Dramatic close-up anime film shot: Lv Guichen in his dark wolf-fur collar and bronze leather armor holds the hilt of the ancient jagged bronze Cangyun Guchi Sword drawn halfway from its scabbard in front of his shoulder, cold cyan-silver steel reflection and warm ember light illuminating his resolute dark eyes and 2D anime profile amidst heavy snow. Pure 2D anime keyframe, NO text."
+    },
+    {
+      "id": "shot_05_start",
+      "refs": ["style_anchor_2d", "char_lvguichen", "char_jiye", "scene_blood_battlefield"],
+      "prompt": "Using the 2D anime art style of image 1, place Lv Guichen from image 2 and Ji Ye from image 3 side-by-side in the fiery snowy battlefield of image 4. Medium-wide heroic two-shot anime film frame: on the left Lv Guichen in wolf-fur collar grips his jagged bronze Cangyun Guchi Sword; on the right Ji Ye in black-iron armor grips his Tiger-Fang Spear; behind them stands a blurred dark line of armored Tianqu knights holding torches in swirling snow and embers. Pure 2D anime keyframe, NO text."
+    },
+    {
+      "id": "shot_05_end",
+      "refs": ["style_anchor_2d", "char_lvguichen", "char_jiye", "scene_shangyang_pass"],
+      "prompt": "Using the 2D anime art style of image 1, compose an epic climax wide low-angle tableau uniting Lv Guichen from image 2, Ji Ye from image 3, and the Shangyang Pass night sky from image 4. Lv Guichen raises the ancient bronze Cangyun Guchi Sword high beside Ji Ye thrusting his Tiger-Fang Spear skyward; directly behind them, dozens of heavily armored Tianqu knights slam their right iron gauntlets firmly across their chest plates and raise gleaming blades in salute beneath the huge blood-red moon and storm of rising golden embers. Pure 2D anime keyframe, NO text."
+    }
+  ],
+  "voices": [
+    {
+      "id": "voice_jiye",
+      "voice": "Fenrir",
+      "fallback_voice": "Orus",
+      "style": "fierce, slightly husky, breathless 18-year-old young warrior shouting with unyielding grit in freezing wind",
+      "text": "阿苏勒，握紧你的剑，今天就算战死在殇阳关下，我们也绝不后退半步！"
+    },
+    {
+      "id": "voice_lvguichen",
+      "voice": "Puck",
+      "fallback_voice": "Charon",
+      "style": "clear, calm, deeply resolute 17-year-old young nobleman speaking with quiet steel and solemn vow",
+      "text": "只要手里这把剑还在，青阳和天驱的荣耀就不会熄灭，铁甲依然在！"
+    }
+  ],
+  "bgm": {
+    "id": "bgm_novoland_epic",
+    "prompt": "Purely instrumental 30-second epic Eastern dark-fantasy anime theatrical trailer soundtrack, strictly no vocals, no singing, no choir lyrics. Begins with deep resonant ancient war drums and a mournful solo cello and guqin motif at 70 BPM, swelling rapidly into thunderous taiko-style war drums, sweeping strings, and heroic low brass fanfare at 132 BPM before ending cleanly on a dramatic resonant drum strike and brass sustain."
+  }
+}

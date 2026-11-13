@@ -9,9 +9,11 @@
     "480p_16_9": "832x480",
     "544p_16_9": "960x544",
     "768p_16_9": "1344x768",
+    "1080p_16_9": "1920x1088",
     "480p_9_16": "480x832",
     "544p_9_16": "544x960",
     "768p_9_16": "768x1344",
+    "1080p_9_16": "1088x1920",
     "768p_1_1": "1024x1024",
     "544p_21_9": "1280x544"
   },
@@ -105,6 +107,91 @@
           "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lms_v1.0_r64.safetensors"
         ],
         "loras_multipliers": "1;1 0;1 0;1",
+        "remove_background_images_ref": 0,
+        "prompt_enhancer": ""
+      }
+    },
+    "ref2va_1080p_2k_ic": {
+      "description": "1080p (1920x1088) Ref2VA 二阶段 IC 精修主档：一阶段 8 步 HyperFlow 定动作、原生立体声与中文口型，二阶段 3 步 Open-H3-Regenerate-2K-IC 保持人像与画风做 1080p 细节重绘（80GB A100 自动解锁 33B 满血；40GB A100 自动跑 20B INT8 Profile 4）。",
+      "settings": {
+        "model_type": "minimax_h3_ref2va_pruned",
+        "image_mode": 0,
+        "merge_loras": "merge before",
+        "guidance_phases": 2,
+        "num_inference_steps": 8,
+        "num_inference_steps2": 3,
+        "switch_threshold": 0.834942,
+        "custom_sigmas": "; 0.834942, 0.696852, 0.468753",
+        "sample_solver": "euler",
+        "video_length": 124,
+        "sliding_window_size": 362,
+        "resolution": "1920x1088",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "skip_steps_cache_type": "",
+        "multi_prompts_gen_type": "PW",
+        "video_prompt_type": "",
+        "audio_prompt_type": "",
+        "image_prompt_type": "",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_hyperflow_8step_lora_bf16.safetensors",
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/open_h3_regenerate_2k_ic_lora_bf16.safetensors",
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lms_v1.0_r64.safetensors"
+        ],
+        "loras_multipliers": "1;1 0;1 0;1",
+        "remove_background_images_ref": 0,
+        "prompt_enhancer": ""
+      }
+    },
+    "fl2va_1080p_2k": {
+      "description": "1080p (1920x1088) FL2VA 二阶段 Regenerate-2K 档：20步一阶段（自动冻结保留原声）+ 3步 Open-H3-Regenerate-2K 二阶段高分辨率精修。",
+      "settings": {
+        "model_type": "minimax_h3_fl2va_pruned",
+        "image_mode": 0,
+        "merge_loras": "merge before",
+        "guidance_phases": 2,
+        "num_inference_steps": 20,
+        "num_inference_steps2": 3,
+        "switch_threshold": 0.909375,
+        "custom_sigmas": "; 0.909375, 0.8571428571428571, 0.6666666666666666",
+        "sample_solver": "euler",
+        "video_length": 124,
+        "sliding_window_size": 362,
+        "resolution": "1920x1088",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "skip_steps_cache_type": "",
+        "multi_prompts_gen_type": "PW",
+        "video_prompt_type": "",
+        "audio_prompt_type": "",
+        "image_prompt_type": "",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/open_h3_regenerate_2k_lora.safetensors"
+        ],
+        "loras_multipliers": "0;1",
+        "prompt_enhancer": ""
+      }
+    },
+    "ref2va_1080p_x2vae": {
+      "description": "1080p 纯手绘线条保护备选档：960x544 LightX2V 8步生成 + MiniMax-H3-X2-Detail-VAE (h3_vae*2) 零重绘步直解 1920x1088，防止二阶段扩散引入写实肌理。",
+      "settings": {
+        "model_type": "minimax_h3_ref2va_pruned",
+        "image_mode": 0,
+        "num_inference_steps": 8,
+        "video_length": 124,
+        "sliding_window_size": 362,
+        "resolution": "960x544",
+        "spatial_upsampling": "h3_vae*2",
+        "guidance_scale": 1,
+        "flow_shift": 12,
+        "multi_prompts_gen_type": "PW",
+        "video_prompt_type": "",
+        "audio_prompt_type": "",
+        "image_prompt_type": "",
+        "activated_loras": [
+          "https://huggingface.co/DeepBeepMeep/MiniMax-H3/resolve/main/loras/minimax_h3_lightx2v_ref2v_turbo_8step_alpha8_v1.0_768p_bf16.safetensors"
+        ],
+        "loras_multipliers": "1.0",
         "remove_background_images_ref": 0,
         "prompt_enhancer": ""
       }

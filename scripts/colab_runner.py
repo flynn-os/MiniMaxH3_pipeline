@@ -38,19 +38,43 @@ def detect_best_attention() -> str:
     return "auto"
 
 
-def detect_default_profile() -> str:
-    """通过 nvidia-smi 查询显存（不初始化 PyTorch CUDA 上下文）：A100(40GB+) 用 4，L4(24GB) 用 4.5 保安全。"""
+def detect_gpu_vram_and_disk() -> tuple[float, float]:
+    """查询云端 GPU 总显存 (GiB) 与根目录剩余磁盘空间 (GiB)，不初始化 PyTorch CUDA 上下文。"""
+    vram_gb = 40.0
     try:
         out = subprocess.check_output(
             ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
             text=True,
         )
         vram_mib = float(out.strip().splitlines()[0])
-        if vram_mib < 28000:
-            return "4.5"
+        vram_gb = vram_mib / 1024.0
     except Exception:
         pass
+    try:
+        free_gb = shutil.disk_usage("/").free / (1024.0 ** 3)
+    except Exception:
+        free_gb = 0.0
+    return vram_gb, free_gb
+
+
+def detect_default_profile() -> str:
+    """通过 nvidia-smi 查询显存：A100(40GB/80GB) 用 4，L4(24GB) 用 4.5 保安全。"""
+    vram_gb, _ = detect_gpu_vram_and_disk()
+    if vram_gb < 28.0:
+        return "4.5"
     return "4"
+
+
+def maybe_upgrade_task_for_80gb_a100(task: dict[str, Any], vram_gb: float, free_gb: float) -> dict[str, Any]:
+    """若检测到 80GB A100 且实例磁盘充裕 (>=58GB)，自动把 pruned 20B 升级为 33B 满血模型。"""
+    upgrade_map = {
+        "minimax_h3_ref2va_pruned": "minimax_h3_ref2va",
+        "minimax_h3_fl2va_pruned": "minimax_h3_fl2va",
+    }
+    model_type = str(task.get("model_type") or "")
+    if vram_gb >= 74.0 and free_gb >= 58.0 and model_type in upgrade_map:
+        task["model_type"] = upgrade_map[model_type]
+    return task
 
 
 def ensure_cloudflared() -> Path:
@@ -155,6 +179,11 @@ def run_batch_mode(args: argparse.Namespace) -> int:
 
     attention = args.attention if args.attention != "auto" else detect_best_attention()
     profile = args.profile if args.profile != "auto" else detect_default_profile()
+    vram_gb, free_gb = detect_gpu_vram_and_disk()
+    if vram_gb >= 74.0 and free_gb >= 58.0:
+        print(f"🚀 检测到 80GB A100 ({vram_gb:.1f} GiB VRAM | {free_gb:.1f} GiB Free Disk)，自动解锁满血 33B 未剪枝模型！")
+    else:
+        print(f"🛡️  运行于 {vram_gb:.1f} GiB VRAM ({free_gb:.1f} GiB Free Disk) 安全高画质模式 (Pruned 20B INT8 + Profile {profile})")
 
     print(f"🎬 准备批量执行 {len(job_files)} 个任务文件 | Attention={attention} | mmgp Profile={profile}")
 
@@ -192,6 +221,7 @@ def run_batch_mode(args: argparse.Namespace) -> int:
                 continue
 
             for t_idx, raw_task in enumerate(tasks, start=1):
+                raw_task = maybe_upgrade_task_for_80gb_a100(raw_task, vram_gb, free_gb)
                 shot_id = raw_task.pop("_shot_id", f"shot_{t_idx:02d}")
                 shot_title = raw_task.pop("_shot_title", "")
                 t0 = time.time()

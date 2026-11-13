@@ -178,8 +178,6 @@ def compile_shot(
         if media_key in shot and shot[media_key]:
             val = shot[media_key]
             task[media_key] = val
-            if media_key == "audio_guide" and not task.get("audio_prompt_type"):
-                task["audio_prompt_type"] = "A"
             if isinstance(val, str):
                 err = validate_drive_uri(val, drive_ws)
                 if err:
@@ -190,6 +188,32 @@ def compile_shot(
                         err = validate_drive_uri(item, drive_ws)
                         if err:
                             warnings.append(err)
+
+    # 自动补齐 WanGP validate_settings() 强制校验的媒体门控标识，防止首尾帧或参考图在运行时被静默清空
+    image_prompt_type = str(task.get("image_prompt_type") or "")
+    if task.get("image_start") and "S" not in image_prompt_type:
+        image_prompt_type += "S"
+    if task.get("video_source") and "V" not in image_prompt_type:
+        image_prompt_type += "V"
+    if task.get("image_end"):
+        if any(c in image_prompt_type for c in "SV"):
+            if "E" not in image_prompt_type:
+                image_prompt_type += "E"
+        elif "L" not in image_prompt_type:
+            image_prompt_type += "L"
+    task["image_prompt_type"] = image_prompt_type
+
+    video_prompt_type = str(task.get("video_prompt_type") or "")
+    if isinstance(task.get("image_refs"), list) and len(task["image_refs"]) > 0 and "I" not in video_prompt_type:
+        video_prompt_type += "I"
+    task["video_prompt_type"] = video_prompt_type
+
+    audio_prompt_type = str(task.get("audio_prompt_type") or "")
+    if task.get("audio_guide") and "A" not in audio_prompt_type:
+        audio_prompt_type += "A"
+    if task.get("audio_guide2") and "B" not in audio_prompt_type:
+        audio_prompt_type += "B"
+    task["audio_prompt_type"] = audio_prompt_type
 
     if "overrides" in shot and isinstance(shot["overrides"], dict):
         task.update(shot["overrides"])

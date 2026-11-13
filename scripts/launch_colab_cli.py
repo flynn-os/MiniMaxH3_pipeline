@@ -80,6 +80,27 @@ os._exit(0)
     subprocess.run([py_bin, "-c", launcher_py], text=True, env=clean_colab_env(), check=True)
 
 
+def create_colab_session(colab_bin: str, session: str, gpu: str, high_mem_first: bool) -> None:
+    """优先尝试申请高显存 (--high-mem，如 80GB A100)，若库存不足或失败则自动回退到标准同型 GPU（如 40GB A100）。"""
+    if high_mem_first:
+        try:
+            print(f"🚀 尝试申请高显存 {gpu} (--high-mem，例如 80GB A100)...", flush=True)
+            run_cmd([colab_bin, "new", "-s", session, "--gpu", gpu, "--high-mem"], check=True)
+            print(f"✅ 成功申请 --high-mem {gpu} 会话 '{session}'！", flush=True)
+            return
+        except subprocess.CalledProcessError as exc:
+            print(f"⚠️  未能抢到 --high-mem {gpu} (exit {exc.returncode})，正在自动回退到标准 {gpu} (40GB)...", flush=True)
+            subprocess.run([colab_bin, "stop", "-s", session], env=clean_colab_env(), capture_output=True, check=False)
+    run_cmd([colab_bin, "new", "-s", session, "--gpu", gpu], check=True)
+
+
+def upload_drive_rel_paths(colab_bin: str, session: str, rels: set[str], local_ws: Path, remote_ws: str) -> None:
+    for rel in sorted(rels):
+        local_file = local_ws / rel
+        if local_file.is_file():
+            run_cmd([colab_bin, "upload", "-s", session, str(local_file), f"{remote_ws}/{rel}"], check=True)
+
+
 def upload_referenced_drive_assets(colab_bin: str, session: str, job_path: Path, local_ws: Path, remote_ws: str) -> None:
     if job_path.suffix.lower() != ".json":
         return
@@ -94,11 +115,7 @@ def upload_referenced_drive_assets(colab_bin: str, session: str, job_path: Path,
         for ref in t.get("image_refs", []) or []:
             if isinstance(ref, str) and ref.startswith("drive://"):
                 uris.add(ref[len("drive://"):].lstrip("/"))
-
-    for rel in sorted(uris):
-        local_file = local_ws / rel
-        if local_file.is_file():
-            run_cmd([colab_bin, "upload", "-s", session, str(local_file), f"{remote_ws}/{rel}"], check=True)
+    upload_drive_rel_paths(colab_bin, session, uris, local_ws, remote_ws)
 
 
 def main() -> int:
@@ -106,6 +123,14 @@ def main() -> int:
     parser.add_argument("--job", type=Path, required=True, nargs="+", help="待渲染的 .wangp.json 任务单路径")
     parser.add_argument("--session", "-s", default=f"h3-{int(time.time()) % 100000}", help="Colab CLI 会话名")
     parser.add_argument("--gpu", default="A100", choices=["A100", "L4", "G4", "H100", "T4"], help="GPU 型号（默认 A100）")
+    parser.add_argument(
+        "--high-mem-first",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="申请 A100 时优先尝试 --high-mem (80GB)，拉不到自动回退 40GB A100（默认开启）",
+    )
+    parser.add_argument("--extra-asset", action="append", default=[], help="额外需要同步至云端工作区的 drive:// 素材 URI")
+    parser.add_argument("--assemble-novoland", action="store_true", help="渲染完所有分镜后直接在云端合成 1080p clean + subtitled 母带")
     parser.add_argument("--poll-seconds", type=int, default=20, help="REST 状态轮询间隔秒数")
     parser.add_argument("--workspace-name", default="MiniMaxH3_Workspace", help="Google Drive 工作区目录名")
     parser.add_argument("--keep-alive", action="store_true", help="跑完后保留实例不销毁（默认立即销毁省 CU）")
@@ -120,8 +145,15 @@ def main() -> int:
     session_created = False
 
     try:
-        run_cmd([colab_bin, "new", "-s", args.session, "--gpu", args.gpu], check=True)
+        create_colab_session(colab_bin, args.session, args.gpu, high_mem_first=args.high_mem_first)
         session_created = True
+
+        extra_rels: set[str] = set()
+        for ea in args.extra_asset:
+            if isinstance(ea, str) and ea.startswith("drive://"):
+                extra_rels.add(ea[len("drive://"):].lstrip("/"))
+        if extra_rels:
+            upload_drive_rel_paths(colab_bin, args.session, extra_rels, local_ws, remote_ws)
 
         remote_jobs: list[str] = []
         for j in args.job:
@@ -133,7 +165,26 @@ def main() -> int:
             run_cmd([colab_bin, "upload", "-s", args.session, str(j_path), remote_j], check=True)
             remote_jobs.append(remote_j)
 
+        for rel_sync in (
+            "configs/presets.json",
+            "scripts/colab_bootstrap.sh",
+            "scripts/colab_runner.py",
+            "scripts/assemble_master.py",
+        ):
+            local_sync = REPO_ROOT / rel_sync
+            if local_sync.is_file():
+                run_cmd([colab_bin, "upload", "-s", args.session, str(local_sync), f"/content/local_sync/{rel_sync}"], check=True)
+
         jobs_arg = " ".join(f'"{rj}"' for rj in remote_jobs)
+        assemble_block = ""
+        if args.assemble_novoland:
+            assemble_block = f"""
+if [ $RUN_RC -eq 0 ]; then
+  python3 /content/MiniMaxH3_pipeline/scripts/assemble_master.py --workspace-dir "{remote_ws}"
+  RUN_RC=$?
+fi
+"""
+
         worker_script = f"""#!/usr/bin/env bash
 set -uo pipefail
 echo "RUNNING" > /content/h3_worker.status
@@ -143,6 +194,10 @@ if [ ! -d /content/MiniMaxH3_pipeline/.git ]; then
   git clone --depth 1 https://github.com/flynn-os/MiniMaxH3_pipeline.git /content/MiniMaxH3_pipeline
 else
   git -C /content/MiniMaxH3_pipeline pull --ff-only || true
+fi
+
+if [ -d /content/local_sync ]; then
+  cp -rf /content/local_sync/* /content/MiniMaxH3_pipeline/ || true
 fi
 
 WORKSPACE_DRIVE="{remote_ws}" WANGP_DIR="/content/WanGP" \\
@@ -160,6 +215,7 @@ python3 /content/MiniMaxH3_pipeline/scripts/colab_runner.py \\
   --no-auto-disconnect \\
   --job {jobs_arg}
 RUN_RC=$?
+{assemble_block}
 ls -1 "{remote_ws}/outputs" > /content/h3_outputs.list 2>/dev/null || true
 if [ $RUN_RC -eq 0 ]; then
   echo "SUCCESS" > /content/h3_worker.status
