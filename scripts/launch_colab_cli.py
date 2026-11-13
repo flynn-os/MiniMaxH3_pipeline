@@ -228,6 +228,9 @@ fi
 set -uo pipefail
 echo "RUNNING" > /content/h3_worker.status
 exec > /content/h3_worker.log 2>&1
+export PYTHONUNBUFFERED=1
+export TQDM_MININTERVAL=5
+export HF_HUB_DISABLE_PROGRESS_BARS=1
 
 if [ ! -d /content/MiniMaxH3_pipeline/.git ]; then
   git clone --depth 1 https://github.com/flynn-os/MiniMaxH3_pipeline.git /content/MiniMaxH3_pipeline
@@ -288,10 +291,12 @@ exit $RUN_RC
                     capture_output=True,
                     check=False,
                 )
-                if log_file.is_file():
+                if log_file.is_file() and log_file.stat().st_size < 25_000_000:
                     lines = log_file.read_text(encoding="utf-8", errors="replace").splitlines()
-                    for ln in lines[seen_lines:]:
-                        print(f"   [A100] {ln}", flush=True)
+                    for raw_ln in lines[seen_lines:]:
+                        clean_ln = raw_ln.split("\\r")[-1].strip()
+                        if clean_ln:
+                            print(f"   [A100] {clean_ln}", flush=True)
                     seen_lines = len(lines)
 
                 state_txt = status_file.read_text(encoding="utf-8").strip() if status_file.is_file() else "RUNNING"

@@ -32,6 +32,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+REAL_STDOUT = sys.__stdout__ if getattr(sys, "__stdout__", None) is not None else sys.stdout
+
 
 def detect_best_attention() -> str:
     """默认交由 WanGP 原生 auto 选择当前 GPU 实际可用且最快的核心（sage / flash / sdpa）。"""
@@ -240,23 +242,14 @@ def run_batch_mode(args: argparse.Namespace) -> int:
                             p = event.data
                             msg = f"   ⏳ {p.phase}: step {p.current_step}/{p.total_steps} ({p.progress}%)"
                             if msg != last_step_msg:
-                                print(msg, flush=True)
+                                print(msg, file=REAL_STDOUT, flush=True)
                                 last_step_msg = msg
                         elif event.kind in ("info", "status"):
                             txt = str(event.data or "").strip()
                             if txt:
-                                print(f"   [{event.kind}] {txt}", flush=True)
+                                print(f"   [{event.kind}] {txt}", file=REAL_STDOUT, flush=True)
                         elif event.kind == "error":
-                            print(f"   [error] {event.data}", flush=True)
-                        elif event.kind == "stream":
-                            line = event.data.text.strip()
-                            if (
-                                line
-                                and "%|" not in line
-                                and "B/s]" not in line
-                                and any(k in line.lower() for k in ("error", "warn", "saved", "traceback", "exception"))
-                            ):
-                                print(f"   [{event.data.stream}] {line}", flush=True)
+                            print(f"   [error] {event.data}", file=REAL_STDOUT, flush=True)
 
                     res = job.result()
                     elapsed = round(time.time() - t0, 2)
