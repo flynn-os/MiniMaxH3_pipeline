@@ -41,7 +41,7 @@ def ensure_cjk_font() -> str:
     if shutil.which("apt-get"):
         print("🔤 正在云端安装中文字体包 fonts-noto-cjk ...")
         subprocess.run(
-            ["bash", "-lc", "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk >/dev/null 2>&1 || true"],
+            ["bash", "-lc", "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk >/dev/null 2>&1 && fc-cache -f >/dev/null 2>&1 || true"],
             check=False,
         )
     return "Noto Sans CJK SC"

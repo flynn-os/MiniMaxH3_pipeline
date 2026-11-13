@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -48,8 +48,9 @@ def run_cmd(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[s
     return subprocess.run(cmd, text=True, env=clean_colab_env(), check=check)
 
 
-def spawn_detached_remote_worker(py_bin: str, session: str, script_remote: str) -> None:
-    launcher_py = f"""
+def _exec_remote_python(py_bin: str, session: str, code: str) -> None:
+    """使用带 60s 握手超时的 ColabRuntime 单次执行短代码后强制退出，绕过 ws 阻塞。"""
+    runner_py = f"""
 import os
 from jupyter_kernel_client.wsclient import KernelWebSocketClient
 from colab_cli.common import state
@@ -63,7 +64,29 @@ KernelWebSocketClient.__init__ = patched_init
 
 s = state.get_session({session!r})
 rt = ColabRuntime(s.url, s.token, session_name=s.name)
-out = rt.execute_code('''
+out = rt.execute_code({code!r})
+print(out)
+os._exit(0)
+"""
+    subprocess.run([py_bin, "-c", runner_py], text=True, env=clean_colab_env(), check=True)
+
+
+def ensure_remote_dirs(py_bin: str, session: str, remote_dirs: set[str]) -> None:
+    """在执行 colab upload 前确保云端目标父目录全部存在，避免 Jupyter Contents API 500 报错。"""
+    dirs = sorted(d for d in remote_dirs if d and d != "/")
+    if not dirs:
+        return
+    code = f"""
+import os
+for d in {dirs!r}:
+    os.makedirs(d, exist_ok=True)
+print("ENSURED_DIRS:", len({dirs!r}))
+"""
+    _exec_remote_python(py_bin, session, code)
+
+
+def spawn_detached_remote_worker(py_bin: str, session: str, script_remote: str) -> None:
+    code = f"""
 import subprocess
 p = subprocess.Popen(
     ["/bin/bash", {script_remote!r}],
@@ -73,11 +96,8 @@ p = subprocess.Popen(
     start_new_session=True,
 )
 print("STARTED_PID:", p.pid)
-''')
-print(out)
-os._exit(0)
 """
-    subprocess.run([py_bin, "-c", launcher_py], text=True, env=clean_colab_env(), check=True)
+    _exec_remote_python(py_bin, session, code)
 
 
 def create_colab_session(colab_bin: str, session: str, gpu: str, high_mem_first: bool) -> None:
@@ -94,14 +114,32 @@ def create_colab_session(colab_bin: str, session: str, gpu: str, high_mem_first:
     run_cmd([colab_bin, "new", "-s", session, "--gpu", gpu], check=True)
 
 
-def upload_drive_rel_paths(colab_bin: str, session: str, rels: set[str], local_ws: Path, remote_ws: str) -> None:
-    for rel in sorted(rels):
+def upload_drive_rel_paths(
+    colab_bin: str,
+    py_bin: str,
+    session: str,
+    rels: set[str],
+    local_ws: Path,
+    remote_ws: str,
+) -> None:
+    valid_rels = [rel for rel in sorted(rels) if (local_ws / rel).is_file()]
+    if not valid_rels:
+        return
+    remote_dirs = {str(PurePosixPath(f"{remote_ws}/{rel}").parent) for rel in valid_rels}
+    ensure_remote_dirs(py_bin, session, remote_dirs)
+    for rel in valid_rels:
         local_file = local_ws / rel
-        if local_file.is_file():
-            run_cmd([colab_bin, "upload", "-s", session, str(local_file), f"{remote_ws}/{rel}"], check=True)
+        run_cmd([colab_bin, "upload", "-s", session, str(local_file), f"{remote_ws}/{rel}"], check=True)
 
 
-def upload_referenced_drive_assets(colab_bin: str, session: str, job_path: Path, local_ws: Path, remote_ws: str) -> None:
+def upload_referenced_drive_assets(
+    colab_bin: str,
+    py_bin: str,
+    session: str,
+    job_path: Path,
+    local_ws: Path,
+    remote_ws: str,
+) -> None:
     if job_path.suffix.lower() != ".json":
         return
     raw = json.loads(job_path.read_text(encoding="utf-8"))
@@ -115,7 +153,7 @@ def upload_referenced_drive_assets(colab_bin: str, session: str, job_path: Path,
         for ref in t.get("image_refs", []) or []:
             if isinstance(ref, str) and ref.startswith("drive://"):
                 uris.add(ref[len("drive://"):].lstrip("/"))
-    upload_drive_rel_paths(colab_bin, session, uris, local_ws, remote_ws)
+    upload_drive_rel_paths(colab_bin, py_bin, session, uris, local_ws, remote_ws)
 
 
 def main() -> int:
@@ -153,18 +191,19 @@ def main() -> int:
             if isinstance(ea, str) and ea.startswith("drive://"):
                 extra_rels.add(ea[len("drive://"):].lstrip("/"))
         if extra_rels:
-            upload_drive_rel_paths(colab_bin, args.session, extra_rels, local_ws, remote_ws)
+            upload_drive_rel_paths(colab_bin, py_bin, args.session, extra_rels, local_ws, remote_ws)
 
         remote_jobs: list[str] = []
         for j in args.job:
             j_path = j.resolve()
             if not j_path.is_file():
                 raise FileNotFoundError(f"任务单不存在: {j_path}")
-            upload_referenced_drive_assets(colab_bin, args.session, j_path, local_ws, remote_ws)
+            upload_referenced_drive_assets(colab_bin, py_bin, args.session, j_path, local_ws, remote_ws)
             remote_j = f"/content/{j_path.name}"
             run_cmd([colab_bin, "upload", "-s", args.session, str(j_path), remote_j], check=True)
             remote_jobs.append(remote_j)
 
+        ensure_remote_dirs(py_bin, args.session, {"/content/local_sync/configs", "/content/local_sync/scripts"})
         for rel_sync in (
             "configs/presets.json",
             "scripts/colab_bootstrap.sh",
@@ -216,7 +255,7 @@ python3 /content/MiniMaxH3_pipeline/scripts/colab_runner.py \\
   --job {jobs_arg}
 RUN_RC=$?
 {assemble_block}
-ls -1 "{remote_ws}/outputs" > /content/h3_outputs.list 2>/dev/null || true
+find "{remote_ws}/outputs" -maxdepth 1 -type f -printf "%f\\n" | sort > /content/h3_outputs.list 2>/dev/null || true
 if [ $RUN_RC -eq 0 ]; then
   echo "SUCCESS" > /content/h3_worker.status
 else

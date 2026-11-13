@@ -66,13 +66,13 @@ def detect_default_profile() -> str:
 
 
 def maybe_upgrade_task_for_80gb_a100(task: dict[str, Any], vram_gb: float, free_gb: float) -> dict[str, Any]:
-    """若检测到 80GB A100 且实例磁盘充裕 (>=58GB)，自动把 pruned 20B 升级为 33B 满血模型。"""
+    """若检测到 80GB A100 且实例磁盘充裕 (>=72GB)，自动把 pruned 20B 升级为 33B 满血模型。"""
     upgrade_map = {
         "minimax_h3_ref2va_pruned": "minimax_h3_ref2va",
         "minimax_h3_fl2va_pruned": "minimax_h3_fl2va",
     }
     model_type = str(task.get("model_type") or "")
-    if vram_gb >= 74.0 and free_gb >= 58.0 and model_type in upgrade_map:
+    if vram_gb >= 74.0 and free_gb >= 72.0 and model_type in upgrade_map:
         task["model_type"] = upgrade_map[model_type]
     return task
 
@@ -180,7 +180,7 @@ def run_batch_mode(args: argparse.Namespace) -> int:
     attention = args.attention if args.attention != "auto" else detect_best_attention()
     profile = args.profile if args.profile != "auto" else detect_default_profile()
     vram_gb, free_gb = detect_gpu_vram_and_disk()
-    if vram_gb >= 74.0 and free_gb >= 58.0:
+    if vram_gb >= 74.0 and free_gb >= 72.0:
         print(f"🚀 检测到 80GB A100 ({vram_gb:.1f} GiB VRAM | {free_gb:.1f} GiB Free Disk)，自动解锁满血 33B 未剪枝模型！")
     else:
         print(f"🛡️  运行于 {vram_gb:.1f} GiB VRAM ({free_gb:.1f} GiB Free Disk) 安全高画质模式 (Pruned 20B INT8 + Profile {profile})")
